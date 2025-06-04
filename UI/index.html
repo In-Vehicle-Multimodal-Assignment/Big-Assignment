@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <title>车载多模态交互系统</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container">
+        <!-- 左侧动画或日志 -->
+        <div class="left-panel">
+            <div class="toggle-buttons">
+                <button id="toggle-view" style="background: none; border: none; cursor: pointer;">
+                    <img id="toggle-icon" src="img/左三角.png" alt="切换视图" width="32" height="32">
+                </button>
+            </div>
+            <div id="animation-area" class="animation-area">
+                <div class="road-wrapper">
+                    <div class="road"></div>
+
+                </div>
+                <img src="img/car.png" class="car" alt="车辆">
+            </div>
+            <div id="log-area" class="log-area hidden">
+                <h3>操作日志</h3>
+                <ul id="log-list">
+                    <li>系统启动完成</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 右侧控制区 -->
+        <div class="right-panel">
+            <div class="icons">
+                <div id="icon-ac" class="icon">
+                    <img id="toggle-icon" src="img/空调.png" alt="空调" width="32" height="32">
+                </div>
+                <div id="icon-fatigue" class="icon">
+                    <img id="toggle-icon" src="img/疲劳驾驶.png" alt="疲劳驾驶" width="32" height="32">
+                </div>
+                <div id="icon-voice" class="icon">
+                    <img id="toggle-icon" src="img/语音.png" alt="语音" width="32" height="32">
+                </div>
+            </div>
+
+            <div class="fusion-output" id="fusion-output">
+                <h3>执行结果</h3>
+                <div id="fusion-content">等待命令输入...</div>
+            </div>
+
+            <div class="alert-box" id="alert-box">
+                <h3>安全警告</h3>
+                <div id="alert-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 登录弹窗 -->
+    <div id="login-modal" class="login-page" style="display: none;">
+        <div class="login-box">
+            <h2>登录系统</h2>
+            <input type="text" id="username" placeholder="用户名">
+            <input type="password" id="password" placeholder="密码">
+            <button id="login-btn">登录</button>
+            <div id="login-error" class="error-msg"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
