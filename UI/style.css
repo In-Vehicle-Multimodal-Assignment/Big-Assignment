@@ -117,6 +117,10 @@ body {
     font-weight: bold;
 }
 
+#toggle-voice {
+    padding: 0;
+}
+
 .fusion-output,
 .alert-box {
     border: 1px solid #ababab;

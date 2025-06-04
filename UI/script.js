@@ -27,18 +27,35 @@ document.getElementById("login-btn").onclick = function () {
   const username = document.getElementById("username").value.trim();
   const password = document.getElementById("password").value;
 
-  if (username === "admin" && password === "1234") {
-    isLoggedIn = true;
-    document.getElementById("login-modal").style.display = "none";
+  fetch("admins.json")
+    .then((res) => res.json())
+    .then((admins) => {
+      const match = admins.find(
+        (admin) => admin.username === username && admin.password === password
+      );
 
-    // 自动切换到日志视图
-    document.getElementById("animation-area").style.display = "none";
-    document.getElementById("log-area").style.display = "block";
-    isAnimationShown = false;
-  } else {
-    document.getElementById("login-error").innerText = "用户名或密码错误";
-  }
+      if (match) {
+        isLoggedIn = true;
+        document.getElementById("login-modal").style.display = "none";
+
+        // 显示日志区
+        document.getElementById("animation-area").style.display = "none";
+        document.getElementById("log-area").style.display = "block";
+        isAnimationShown = false;
+      } else {
+        document.getElementById("login-error").innerText = "用户名或密码错误";
+        setTimeout(() => {
+          document.getElementById("login-modal").style.display = "none";
+        }, 700);  // 登录失败也关闭框
+      }
+    })
+    .catch((err) => {
+      document.getElementById("login-error").innerText = "加载用户信息失败";
+      document.getElementById("login-modal").style.display = "none"; // 出错也关闭框
+      console.error(err);
+    });
 };
+
 
 
 // 模拟多模态融合执行结果
@@ -70,7 +87,41 @@ function updateFusionResult(type, message) {
   li.textContent = `执行 ${message}`;
   logList.appendChild(li);
 }
+//语音
+const voiceBtn = document.getElementById("toggle-voice");
+const animationArea = document.getElementById("icon-voice");
 
+voiceBtn.onclick = () => {
+  animationArea.style.backgroundColor = "yellow"; // 开始录音，变黄色
+
+  fetch("http://localhost:5000/start-record", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ flag: true })  // 向后端发送标志位
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        animationArea.style.backgroundColor = "green"; // 录音结束变绿色
+
+        setTimeout(() => {
+          animationArea.style.backgroundColor = "#eee"; // 恢复原色
+        }, 1000);
+      } else {
+        animationArea.style.backgroundColor = "#e57373"; // 出错提示
+        setTimeout(() => {
+          animationArea.style.backgroundColor = "#eee"; // 恢复原色
+        }, 1000);
+        console.error("后端返回失败状态");
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      animationArea.style.backgroundColor = "#e57373"; // 出错提示
+    });
+};
 
 // 模拟指令执行（调试用）
 setTimeout(() => {
