@@ -1,10 +1,23 @@
 let isAnimationShown = true;
-let isLoggedIn = false; // 用户登录状态标记
+let isLoggedIn = false;
+let currentUser = null;
+let isAdmin = false;
 
+// 页面加载即弹出登录
+document.addEventListener("DOMContentLoaded", function () {
+  document.getElementById("login-modal").style.display = "flex";
+});
+
+// 切换视图按钮逻辑
 document.getElementById("toggle-view").onclick = function () {
   if (!isLoggedIn) {
-    // 弹出登录框而不是切换视图
     document.getElementById("login-modal").style.display = "flex";
+    return;
+  }
+
+  // 检查权限：非管理员不能切换到日志视图
+  if (isAnimationShown && !isAdmin) {
+    alert("权限不足，只有管理员可以查看操作日志！");
     return;
   }
 
@@ -22,39 +35,83 @@ document.getElementById("toggle-view").onclick = function () {
   isAnimationShown = !isAnimationShown;
 };
 
-// 登录按钮逻辑
 document.getElementById("login-btn").onclick = function () {
   const username = document.getElementById("username").value.trim();
-  const password = document.getElementById("password").value;
+  if (!username) {
+    showLoginError("请输入用户名");
+    return;
+  }
 
-  fetch("admins.json")
+  fetch("http://localhost:5000/login", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ username }),
+  })
     .then((res) => res.json())
-    .then((admins) => {
-      const match = admins.find(
-        (admin) => admin.username === username && admin.password === password
-      );
-
-      if (match) {
-        isLoggedIn = true;
-        document.getElementById("login-modal").style.display = "none";
-
-        // 显示日志区
-        document.getElementById("animation-area").style.display = "none";
-        document.getElementById("log-area").style.display = "block";
-        isAnimationShown = false;
+    .then((data) => {
+      if (data.success) {
+        currentUser = username;
+        isAdmin = data.is_admin;
+        finishLogin();
       } else {
-        document.getElementById("login-error").innerText = "用户名或密码错误";
-        setTimeout(() => {
-          document.getElementById("login-modal").style.display = "none";
-        }, 700);  // 登录失败也关闭框
+        showLoginError(data.message || "登录失败");
       }
     })
     .catch((err) => {
-      document.getElementById("login-error").innerText = "加载用户信息失败";
-      document.getElementById("login-modal").style.display = "none"; // 出错也关闭框
+      showLoginError("请求登录接口失败");
       console.error(err);
     });
 };
+
+
+
+function finishLogin() {
+  isLoggedIn = true;
+  document.getElementById("login-modal").style.display = "none";
+
+  // 显示动画区域
+  document.getElementById("animation-area").style.display = "flex";
+  document.getElementById("log-area").style.display = "none";
+  isAnimationShown = true;
+
+  // 显示用户名
+  const userDisplay = document.getElementById("user-display");
+  userDisplay.textContent = `当前用户：${currentUser}${isAdmin ? "（管理员）" : "（普通用户）"}`;
+
+  fetchGestureResult(); 
+  fetchVoiceResult();
+  fetchHeadResult();
+  fetchEyeResult();
+  // 错开时间启动，每个初始延迟不同
+  setTimeout(() => {
+    fetchGestureResult();
+    setInterval(fetchGestureResult, 1000); // 每4秒轮询
+  }, 0); // 立即执行
+
+  setTimeout(() => {
+    fetchVoiceResult();
+    setInterval(fetchVoiceResult, 1000); // 每4秒轮询
+  }, 200); // 延迟1秒启动
+
+  setTimeout(() => {
+    fetchHeadResult();
+    setInterval(fetchHeadResult, 1000); // 每4秒轮询
+  }, 400); // 延迟2秒启动
+
+  setTimeout(() => {
+    fetchEyeResult();
+    setInterval(fetchEyeResult, 1000); // 每4秒轮询
+  }, 800); // 延迟3秒启动
+  }
+
+function showLoginError(message) {
+  document.getElementById("login-error").innerText = message;
+  setTimeout(() => {
+    document.getElementById("login-modal").style.display = "none";
+  }, 1000);
+}
 
 
 
@@ -111,8 +168,56 @@ function updateFusionResult(type, message) {
 }
 
 // 获取后端数据并触发更新
-function fetchFusionResult() {
-  fetch('http://localhost:5001/fusion-result') 
+function fetchGestureResult() {
+  fetch('http://localhost:5000/gesture-result') 
+    .then(response => response.json())
+    .then(data => {
+      let result;
+      if (typeof data.code !== 'undefined') {
+        // 返回的是数字
+        result = mapResultCode(data.code);
+      } 
+      updateFusionResult(result.type, result.message);
+    })
+    .catch(error => {
+      console.error('获取结果失败:', error);
+    });
+}
+
+function fetchVoiceResult() {
+  fetch('http://localhost:5000/voice-result') 
+    .then(response => response.json())
+    .then(data => {
+      let result;
+      if (typeof data.code !== 'undefined') {
+        // 返回的是数字
+        result = mapResultCode(data.code);
+      } 
+      updateFusionResult(result.type, result.message);
+    })
+    .catch(error => {
+      console.error('获取结果失败:', error);
+    });
+}
+
+function fetchHeadResult() {
+  fetch('http://localhost:5000/head-result') 
+    .then(response => response.json())
+    .then(data => {
+      let result;
+      if (typeof data.code !== 'undefined') {
+        // 返回的是数字
+        result = mapResultCode(data.code);
+      } 
+      updateFusionResult(result.type, result.message);
+    })
+    .catch(error => {
+      console.error('获取结果失败:', error);
+    });
+}
+
+function fetchEyeResult() {
+  fetch('http://localhost:5000/eye-result') 
     .then(response => response.json())
     .then(data => {
       let result;
@@ -126,7 +231,7 @@ function fetchFusionResult() {
       updateFusionResult(result.type, result.message);
     })
     .catch(error => {
-      console.error('获取融合结果失败:', error);
+      console.error('获取结果失败:', error);
     });
 }
 
@@ -176,8 +281,4 @@ voiceBtn.onclick = () => {
 //  updateFusionResult("fatigue", "警告：检测到疲劳驾驶！");
 //}, 5000);
 
-// 启动定时获取
-window.onload = function () {
-  fetchFusionResult(); // 页面加载立即执行一次
-  setInterval(fetchFusionResult, 3000); // 每5秒执行一次
-};
+

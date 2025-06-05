@@ -1,6 +1,6 @@
 [
-  { "username": "1", "password": "1" },
-  { "username": "admin1", "password": "123456" },
-  { "username": "alice", "password": "alicepass" },
-  { "username": "bob", "password": "bob123" }
+  { "username": "1"},
+  { "username": "admin1"},
+  { "username": "alice"},
+  { "username": "bob"}
 ]
