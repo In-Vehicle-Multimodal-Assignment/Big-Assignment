@@ -125,6 +125,12 @@ function mapResultCode(code) {
       return { type: "ac", message: "打开空调" };
     case 4:
       return { type: "music", message: "播放音乐" };
+    case 5:
+      return { type: "fatigue_r", message: "驾驶员状态正常" };
+    case 6:
+      return { type: "ac_r", message: "关闭空调" };
+    case 7:
+      return { type: "music_r", message: "停止播放音乐" };
     default:
       return { type: "unknown", message: "未知操作" };
   }
@@ -133,15 +139,10 @@ function mapResultCode(code) {
 // 更新融合执行结果
 function updateFusionResult(type, message) {
   const fusionContent = document.getElementById("fusion-content");
-  const icons = document.querySelectorAll(".icon");
 
   // 清空内容
   fusionContent.innerHTML = '';
 
-  // 重置所有图标状态
-  icons.forEach(icon => {
-    icon.classList.remove("active", "fatigue-active");
-  });
 
   // 激活目标图标并更新内容
   if (type === "ac") {
@@ -156,7 +157,20 @@ function updateFusionResult(type, message) {
     const iconMUSIC = document.getElementById("icon-music");
     iconMUSIC.classList.add("active");
     fusionContent.innerHTML = `<div>🎵 已执行：<strong>${message}</strong></div>`;
-  }else {
+  } else if (type === "ac_r") {
+    const iconAC = document.getElementById("icon-ac");
+    iconAC.classList.remove("active");
+    fusionContent.innerHTML = `<div>🚗 已执行：<strong>${message}</strong></div>`;
+  } else if (type === "fatigue_r") {
+    const iconFatigue = document.getElementById("icon-fatigue");
+    iconFatigue.classList.remove("fatigue-active");
+    document.getElementById("alert-content").innerText = message;
+  } else if (type === "music_r") {
+    const iconMUSIC = document.getElementById("icon-music");
+    iconMUSIC.classList.remove("active");
+    fusionContent.innerHTML = `<div>🎵 已执行：<strong>${message}</strong></div>`;
+  }
+  else {
     fusionContent.innerHTML = `<div>⚠️ ${message}</div>`;
   }
 
