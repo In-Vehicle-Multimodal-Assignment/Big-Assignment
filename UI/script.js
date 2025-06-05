@@ -59,11 +59,27 @@ document.getElementById("login-btn").onclick = function () {
 
 
 // 模拟多模态融合执行结果
+// 数字与操作映射
+function mapResultCode(code) {
+  switch (code) {  
+    case 2:
+      return { type: "fatigue", message: "驾驶员疲劳，请注意休息" };
+    case 3:
+      return { type: "ac", message: "打开空调" };
+    case 4:
+      return { type: "music", message: "播放音乐" };
+    default:
+      return { type: "unknown", message: "未知操作" };
+  }
+}
+
+// 更新融合执行结果
 function updateFusionResult(type, message) {
   const fusionContent = document.getElementById("fusion-content");
   const icons = document.querySelectorAll(".icon");
 
-  fusionContent.innerHTML = ''; // 清空内容
+  // 清空内容
+  fusionContent.innerHTML = '';
 
   // 重置所有图标状态
   icons.forEach(icon => {
@@ -79,6 +95,12 @@ function updateFusionResult(type, message) {
     const iconFatigue = document.getElementById("icon-fatigue");
     iconFatigue.classList.add("fatigue-active");
     document.getElementById("alert-content").innerText = message;
+  } else if (type === "music") {
+    const iconMUSIC = document.getElementById("icon-music");
+    iconMUSIC.classList.add("active");
+    fusionContent.innerHTML = `<div>🎵 已执行：<strong>${message}</strong></div>`;
+  }else {
+    fusionContent.innerHTML = `<div>⚠️ ${message}</div>`;
   }
 
   // 添加日志
@@ -87,6 +109,28 @@ function updateFusionResult(type, message) {
   li.textContent = `执行 ${message}`;
   logList.appendChild(li);
 }
+
+// 获取后端数据并触发更新
+function fetchFusionResult() {
+  fetch('http://localhost:5001/fusion-result') 
+    .then(response => response.json())
+    .then(data => {
+      let result;
+      if (typeof data.code !== 'undefined') {
+        // 返回的是数字
+        result = mapResultCode(data.code);
+      } else {
+        // 结构化返回 { type: "", message: "" }
+        result = data;
+      }
+      updateFusionResult(result.type, result.message);
+    })
+    .catch(error => {
+      console.error('获取融合结果失败:', error);
+    });
+}
+
+
 //语音
 const voiceBtn = document.getElementById("toggle-voice");
 const animationArea = document.getElementById("icon-voice");
@@ -124,12 +168,16 @@ voiceBtn.onclick = () => {
 };
 
 // 模拟指令执行（调试用）
-setTimeout(() => {
-  updateFusionResult("ac", "空调打开 22°C");
-}, 2000);
+//setTimeout(() => {
+//  updateFusionResult("ac", "空调打开 22°C");
+//}, 2000);
 
-setTimeout(() => {
-  updateFusionResult("fatigue", "警告：检测到疲劳驾驶！");
-}, 5000);
+//setTimeout(() => {
+//  updateFusionResult("fatigue", "警告：检测到疲劳驾驶！");
+//}, 5000);
 
-
+// 启动定时获取
+window.onload = function () {
+  fetchFusionResult(); // 页面加载立即执行一次
+  setInterval(fetchFusionResult, 3000); // 每5秒执行一次
+};
