@@ -235,6 +235,9 @@ function updateFusionResult(type, message) {
   const logList = document.getElementById("log-list");
   const li = document.createElement("li");
   if(message!=''){
+    const utterance = new SpeechSynthesisUtterance(message);
+    utterance.lang = 'zh-CN';
+    window.speechSynthesis.speak(utterance);
     li.textContent = `[${timestamp}] 执行 ${message}`;
     logList.appendChild(li);
 
