@@ -15,12 +15,11 @@
                 <button id="toggle-view" style="background: none; border: none; cursor: pointer;">
                     <img id="toggle-icon" src="img/左三角.png" alt="切换视图" width="32" height="32">
                 </button>
-                <span id="user-display" style="margin-left: 10px; font-weight: bold;"></span>
+                <span id="user-display" class="user-display"></span>
             </div>
             <div id="animation-area" class="animation-area">
                 <div class="road-wrapper">
                     <div class="road"></div>
-
                 </div>
                 <img src="img/car.png" class="car" alt="车辆">
             </div>
@@ -30,16 +29,23 @@
                     <li>系统启动完成</li>
                 </ul>
             </div>
+            
         </div>
 
         <!-- 右侧控制区 -->
         <div class="right-panel">
             <div class="icons">
+                <div id="icon-auto" class="icon">
+                    <img id="toggle-icon" src="img/自动驾驶.png" alt="自动驾驶" width="32" height="32">
+                </div>
                 <div id="icon-ac" class="icon">
                     <img id="toggle-icon" src="img/空调.png" alt="空调" width="32" height="32">
                 </div>
                 <div id="icon-music" class="icon">
                     <img id="toggle-icon" src="img/音乐.png" alt="音乐" width="32" height="32">
+                </div>
+                <div id="icon-distract" class="icon">
+                    <img id="toggle-icon" src="img/分心.png" alt="驾驶员分心" width="36" height="36">
                 </div>
                 <div id="icon-fatigue" class="icon">
                     <img id="toggle-icon" src="img/疲劳驾驶.png" alt="疲劳驾驶" width="32" height="32">
@@ -74,6 +80,29 @@
         </div>
     </div>
 
+    <!-- 疲劳驾驶确认弹窗 -->
+    <div id="fatigue-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h3>疲劳驾驶提醒</h3>
+            <p>检测到您可能疲劳驾驶，请确认您现在是否状态良好？</p>
+            <div class="modal-actions">
+                <button id="confirm-safe">我状态良好</button>
+                <button id="report-fatigue">我需要休息</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 分心驾驶确认弹窗 -->
+    <div id="distract-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h3>分心驾驶提醒</h3>
+            <p>检测到您可能存在分心驾驶，请确认您现在是否状态良好？</p>
+            <div class="modal-actions">
+                <button id="confirm-safe">我状态良好</button>
+                <button id="report-fatigue">我需要休息</button>
+            </div>
+        </div>
+    </div>
     <script src="script.js"></script>
 </body>
 

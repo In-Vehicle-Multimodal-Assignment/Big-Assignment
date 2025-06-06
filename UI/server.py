@@ -6,6 +6,10 @@ import sys
 import random
 from flask_cors import CORS
 from pydantic import BaseModel
+from datetime import datetime
+import logging
+from pydantic import ValidationError
+from flask import request
 
 app = Flask(__name__)
 CORS(app)
@@ -45,25 +49,25 @@ def login():
 # 模拟接口：返回数字类型结果
 @app.route('/gesture-result')
 def gesture_result():
-    code = random.choice([4,2,3])  # 模拟返回值
+    code = random.choice([11])  # 模拟返回值
     return jsonify(code=code)
 
 # 返回结构化数据
 @app.route('/voice-result')
 def voice_result():
-    code = random.choice([4,2,3])  # 模拟返回值
+    code = random.choice([11])  # 模拟返回值
     return jsonify(code=code)
 
 # 模拟接口：返回数字类型结果
 @app.route('/head-result')
 def head_result():
-    code = random.choice([4,2,3])  # 模拟返回值
+    code = random.choice([9])  # 模拟返回值
     return jsonify(code=code)
 
 # 返回结构化数据
 @app.route('/eye-result')
 def eye_result():
-    code = random.choice([4,2,3])  # 模拟返回值
+    code = random.choice([9])  # 模拟返回值
     return jsonify(code=code)
 
 @app.route('/start-record', methods=['POST'])
@@ -77,6 +81,18 @@ def start_record():
         return jsonify(success=True)
     else:
         return jsonify(success=False), 400
+
+
+logging.basicConfig(level=logging.INFO)
+
+
+
+@app.route("/saveResult", methods=["POST"])
+def save_result():
+    data = request.get_json()
+    # 这里你可以打印或者处理收到的数据
+    print(data)
+    return jsonify({"status": "success"})
 
 if __name__ == '__main__':
     app.run(debug=True,port=5000)
