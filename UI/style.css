@@ -1,0 +1,184 @@
+body {
+    margin: 0;
+    font-family: "Microsoft Yahei", sans-serif;
+}
+
+.container {
+    display: flex;
+    height: 100vh;
+}
+
+.left-panel {
+    flex: 1.5;
+    position: relative;
+    background-color: #f0f0f0;
+    overflow: hidden;
+    border: 1px solid #ccc;
+    /*box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);*/
+}
+
+.toggle-buttons {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    border: none;
+    z-index: 2;
+}
+
+.animation-area {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    background-color: #f0f0f0;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+}
+
+.road-wrapper {
+    position: absolute;
+    bottom: 50px;
+    width: 420px;
+    height: 80%;
+    overflow: hidden;
+}
+
+.road {
+    width: 100%;
+    height: 200%;
+    background: url('img/road.jpg') repeat-y;
+    background-size: 100% auto;
+    animation: scroll-road-background 5s linear infinite;
+}
+
+@keyframes scroll-road-background {
+    from {
+        background-position-y: 0;
+    }
+
+    to {
+        background-position-y: 100%;
+    }
+}
+
+
+.car {
+    position: absolute;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    height: 500px;
+    /* 加大车辆尺寸 */
+    z-index: 2;
+}
+
+.log-area {
+    padding: 20px;
+    display: none;
+}
+
+.log-area.hidden {
+    display: none;
+}
+
+.right-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 20px;
+    background-color: #dde2e2;
+}
+
+.icons {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 20px;
+}
+
+.icon {
+    padding: 10px 15px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #eee;
+    cursor: pointer;
+}
+
+.icon.active {
+    background-color: #6fcca2;
+    color: white;
+    font-weight: bold;
+}
+
+.icon.fatigue-active {
+    background-color: #e57373;
+    color: white;
+    font-weight: bold;
+}
+
+#toggle-voice {
+    padding: 0;
+}
+
+.fusion-output,
+.alert-box {
+    border: 1px solid #ababab;
+    border-radius: 10px;
+    padding: 15px;
+    height: 35%;
+    margin-bottom: 15px;
+}
+
+.alert-box {
+    border-color: red;
+}
+
+#alert-content {
+    color: red;
+    font-weight: bold;
+}
+
+.login-page {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.login-box {
+    background-color: white;
+    padding: 30px 40px;
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+    text-align: center;
+}
+
+.login-box input {
+    display: block;
+    width: 100%;
+    margin: 10px 0;
+    padding: 8px;
+    font-size: 16px;
+}
+
+.login-box button {
+    padding: 8px 20px;
+    background-color: #6fcca2;
+    border: none;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.error-msg {
+    color: red;
+    margin-top: 10px;
+}
