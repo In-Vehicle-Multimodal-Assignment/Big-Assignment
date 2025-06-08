@@ -18,11 +18,20 @@ body {
 }
 
 .toggle-buttons {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    border: none;
-    z-index: 2;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    /* 宽度100% */
+    box-sizing: border-box;
+    /* 防止padding影响宽度 */
+    padding: 10px;
+}
+
+
+.user-display {
+    font-weight: bold;
+    text-align: right;
 }
 
 .animation-area {
@@ -76,6 +85,8 @@ body {
 .log-area {
     padding: 20px;
     display: none;
+    max-height: 500px;
+    overflow-y: auto;
 }
 
 .log-area.hidden {
@@ -98,7 +109,7 @@ body {
 }
 
 .icon {
-    padding: 10px 15px;
+    padding: 10px 20px;
     border: 1px solid #ccc;
     border-radius: 8px;
     background-color: #eee;
@@ -181,4 +192,32 @@ body {
 .error-msg {
     color: red;
     margin-top: 10px;
+}
+
+.modal {
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 35%;
+    width: 100%;
+    height: 20%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    background: rgb(227, 83, 83);
+    color: rgb(255, 255, 255);
+    padding: 20px 30px;
+    border-radius: 10px;
+    text-align: center;
+}
+
+.modal-actions button {
+    margin: 10px;
+    padding: 8px 16px;
+    cursor: pointer;
+    font-size: 16px;
 }

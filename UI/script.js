@@ -84,6 +84,7 @@ function finishLogin() {
   fetchVoiceResult();
   fetchHeadResult();
   fetchEyeResult();
+  fetchLoginResult();
   // 错开时间启动，每个初始延迟不同
   setTimeout(() => {
     fetchGestureResult();
@@ -103,6 +104,11 @@ function finishLogin() {
   setTimeout(() => {
     fetchEyeResult();
     setInterval(fetchEyeResult, 1000); // 每4秒轮询
+  }, 600); // 延迟3秒启动
+  
+  setTimeout(() => {
+    fetchLoginResult();
+    setInterval(fetchLoginResult, 1000); // 每4秒轮询
   }, 800); // 延迟3秒启动
   }
 
@@ -120,7 +126,7 @@ function showLoginError(message) {
 function mapResultCode(code) {
   switch (code) {  
     case 2:
-      return { type: "fatigue", message: "驾驶员疲劳，请注意休息" };
+      return { type: "fatigue", message: "驾驶员疲劳，请注意休息/驾驶员位置异常" };
     case 3:
       return { type: "ac", message: "打开空调" };
     case 4:
@@ -139,55 +145,125 @@ function mapResultCode(code) {
       return { type: "eye_center", message: "检测到驾驶员注视前方" };
     case 11:
       return { type: "eye_peripheral", message: "检测到驾驶员注视周边" };
+    case 12:
+      return { type: "auto", message: "自动驾驶开启" };
+    case 13:
+      return { type: "auto_r", message: "自动驾驶关闭" };
+    case 14:
+      return { type: "login_ac", message: "个性化服务：开启空调" };
+    case 15:
+      return { type: "login_music", message: "个性化服务：播放音乐" };
     default:
-      return { type: "unknown", message: "未知操作" };
+      return { type: "unknown", message: "" };
   }
 }
+isAutoDriving = 0;
 
-// 更新融合执行结果
 function updateFusionResult(type, message) {
   const fusionContent = document.getElementById("fusion-content");
-
-  // 清空内容
   fusionContent.innerHTML = '';
 
+  const timestamp = new Date().toLocaleString(); // 前端显示用
+  const isoTime = new Date().toISOString();      // 后端存储用
 
   // 激活目标图标并更新内容
   if (type === "ac") {
-    const iconAC = document.getElementById("icon-ac");
-    iconAC.classList.add("active");
+    document.getElementById("icon-ac").classList.add("active");
+    fusionContent.innerHTML = `<div>🚗 已执行：<strong>${message}</strong></div>`;
+  }else if (type === "login_ac") {
+    document.getElementById("icon-ac").classList.add("active");
+    fusionContent.innerHTML = `<div>🚗 已执行：<strong>${message}</strong></div>`;
+  }else if (type === "auto") {
+    document.getElementById("icon-fatigue").classList.remove("fatigue-active");
+    document.getElementById("icon-distract").classList.remove("fatigue-active");
+    isAutoDriving=1;
+    document.getElementById("icon-auto").classList.add("active");
     fusionContent.innerHTML = `<div>🚗 已执行：<strong>${message}</strong></div>`;
   } else if (type === "fatigue") {
-    const iconFatigue = document.getElementById("icon-fatigue");
-    iconFatigue.classList.add("fatigue-active");
-    document.getElementById("alert-content").innerText = message;
+    if (!isAutoDriving) {
+      document.getElementById("icon-fatigue").classList.add("fatigue-active");
+      document.getElementById("alert-content").innerText = message;
+
+      document.getElementById("fatigue-modal").style.display = "flex";
+      showFatigueModal();
+    }else{
+      message='';
+    }
   } else if (type === "music") {
-    const iconMUSIC = document.getElementById("icon-music");
-    iconMUSIC.classList.add("active");
+    document.getElementById("icon-music").classList.add("active");
     fusionContent.innerHTML = `<div>🎵 已执行：<strong>${message}</strong></div>`;
+  } else if (type === "login_music") {
+    document.getElementById("icon-music").classList.add("active");
+    fusionContent.innerHTML = `<div>🎵 已执行：<strong>${message}</strong></div>`;
+  } else if (type === "eye_peripheral") {
+    if (!isAutoDriving) {
+      document.getElementById("icon-distract").classList.add("fatigue-active");
+      document.getElementById("alert-content").innerText = message;
+
+      document.getElementById("distract-modal").style.display = "flex";
+      showDistractModal();
+    }else{
+      message='';
+    }
   } else if (type === "ac_r") {
-    const iconAC = document.getElementById("icon-ac");
-    iconAC.classList.remove("active");
+    document.getElementById("icon-ac").classList.remove("active");
     fusionContent.innerHTML = `<div>🚗 已执行：<strong>${message}</strong></div>`;
-  } else if (type === "fatigue_r") {
-    const iconFatigue = document.getElementById("icon-fatigue");
-    iconFatigue.classList.remove("fatigue-active");
+  } else if (type === "auto_r") {
+    isAutoDriving=0;
+    document.getElementById("icon-auto").classList.remove("active");
+    fusionContent.innerHTML = `<div>🚗 已执行：<strong>${message}</strong></div>`;
+  }else if (type === "fatigue_r") {
+    document.getElementById("icon-fatigue").classList.remove("fatigue-active");
+    document.getElementById("alert-content").innerText = message;
+  } else if (type === "eye_center") {
+    document.getElementById("icon-distract").classList.remove("fatigue-active");
     document.getElementById("alert-content").innerText = message;
   } else if (type === "music_r") {
-    const iconMUSIC = document.getElementById("icon-music");
-    iconMUSIC.classList.remove("active");
+    document.getElementById("icon-music").classList.remove("active");
     fusionContent.innerHTML = `<div>🎵 已执行：<strong>${message}</strong></div>`;
-  }
-  else {
-    fusionContent.innerHTML = `<div>⚠️ ${message}</div>`;
+  } else if (type === "ok") {
+    const modal = document.getElementById("fatigue-modal");
+    const modal2 = document.getElementById("distract-modal");
+    if (modal.style.display === "flex" || modal.style.display === "block") {
+      modal.style.display = "none";
+      document.getElementById("alert-content").innerText = "系统检测：驾驶员状态良好";
+      updateFusionResult("fatigue_r", "驾驶员状态正常");  
+    }
+    if (modal2.style.display === "flex" || modal2.style.display === "block") {
+      modal2.style.display = "none";
+      document.getElementById("alert-content").innerText = "系统检测：驾驶员状态良好";
+      updateFusionResult("eye_center", "驾驶员状态正常");  
+    }
+  } else if (type === "no") {
+    const modal = document.getElementById("fatigue-modal");
+    const modal2 = document.getElementById("distract-modal");
+    if (modal.style.display === "flex" || modal.style.display === "block") {
+      modal.style.display = "none";
+      updateFusionResult("auto", "自动驾驶开启");
+    }
+    if (modal2.style.display === "flex" || modal2.style.display === "block") {
+      modal2.style.display = "none";
+      updateFusionResult("auto", "自动驾驶开启");
+    }
   }
 
-  // 添加日志
+  // 添加带时间的日志
   const logList = document.getElementById("log-list");
   const li = document.createElement("li");
-  li.textContent = `执行 ${message}`;
-  logList.appendChild(li);
+  if(message!=''){
+    const utterance = new SpeechSynthesisUtterance(message);
+    utterance.lang = 'zh-CN';
+    utterance.rate = 2; // 2倍速（可调整）
+    window.speechSynthesis.speak(utterance);
+    li.textContent = `[${timestamp}] 执行 ${message}`;
+    logList.appendChild(li);
+
+    // 发送给后端
+    sendToBackend(determineResultType(type), message, isoTime);
+  }
+
 }
+
 
 // 获取后端数据并触发更新
 function fetchGestureResult() {
@@ -205,6 +281,23 @@ function fetchGestureResult() {
       console.error('获取结果失败:', error);
     });
 }
+
+function fetchLoginResult() {
+  fetch('http://localhost:5000/login-result') 
+    .then(response => response.json())
+    .then(data => {
+      let result;
+      if (typeof data.code !== 'undefined') {
+        // 返回的是数字
+        result = mapResultCode(data.code);
+      } 
+      updateFusionResult(result.type, result.message);
+    })
+    .catch(error => {
+      console.error('获取结果失败:', error);
+    });
+}
+
 
 function fetchVoiceResult() {
   fetch('http://localhost:5000/voice-result') 
@@ -275,7 +368,7 @@ voiceBtn.onclick = () => {
     .then(res => res.json())
     .then(data => {
       if (data.success) {
-        animationArea.style.backgroundColor = "green"; // 录音结束变绿色
+        animationArea.style.backgroundColor = "#6fcca2"; // 录音结束变绿色
 
         setTimeout(() => {
           animationArea.style.backgroundColor = "#eee"; // 恢复原色
@@ -293,6 +386,102 @@ voiceBtn.onclick = () => {
       animationArea.style.backgroundColor = "#e57373"; // 出错提示
     });
 };
+
+
+function showFatigueModal() {
+  const modal = document.getElementById("fatigue-modal");
+  modal.style.display = "block";
+
+  // 确保只绑定一次监听器
+  const confirmBtn = document.getElementById("confirm-safe");
+  const reportBtn = document.getElementById("report-fatigue");
+
+  // 先移除旧的绑定（避免重复绑定）
+  confirmBtn.replaceWith(confirmBtn.cloneNode(true));
+  reportBtn.replaceWith(reportBtn.cloneNode(true));
+
+  // 重新获取克隆后的节点
+  const newConfirmBtn = document.getElementById("confirm-safe");
+  const newReportBtn = document.getElementById("report-fatigue");
+
+  newConfirmBtn.addEventListener("click", () => {
+    modal.style.display = "none";
+    updateFusionResult("fatigue_r", "驾驶员状态正常");
+
+    // 向后台发送用户选择：状态良好
+    sendToBackend("execution", "用户确认状态良好");
+  });
+
+  newReportBtn.addEventListener("click", () => {
+    modal.style.display = "none";
+    updateFusionResult("auto", "自动驾驶开启");
+
+    // 向后台发送用户选择：疲劳驾驶
+    sendToBackend("securityWarning", "用户确认疲劳驾驶");
+  });
+}
+
+function showDistractModal() {
+  const modal = document.getElementById("distract-modal");
+  modal.style.display = "block";
+
+  // 确保只绑定一次监听器
+  const confirmBtn = document.getElementById("confirm-safe");
+  const reportBtn = document.getElementById("report-fatigue");
+
+  // 先移除旧的绑定（避免重复绑定）
+  confirmBtn.replaceWith(confirmBtn.cloneNode(true));
+  reportBtn.replaceWith(reportBtn.cloneNode(true));
+
+  // 重新获取克隆后的节点
+  const newConfirmBtn = document.getElementById("confirm-safe");
+  const newReportBtn = document.getElementById("report-fatigue");
+
+  newConfirmBtn.addEventListener("click", () => {
+    modal.style.display = "none";
+    updateFusionResult("eye_center", "驾驶员状态正常");
+
+    // 向后台发送用户选择：状态良好
+    sendToBackend("execution", "用户确认状态良好");
+  });
+
+  newReportBtn.addEventListener("click", () => {
+    modal.style.display = "none";
+    updateFusionResult("auto", "自动驾驶开启");
+    // 向后台发送用户选择：分心驾驶
+    sendToBackend("securityWarning", "用户无法专注驾驶");
+  });
+}
+
+
+function determineResultType(type) {
+  const warningTypes = ["fatigue", "eye_peripheral", "eye_center","fatigue_r"];
+  return warningTypes.includes(type) ? "securityWarning" : "execution";
+}
+
+// 封装发送逻辑
+function sendToBackend(resultType, content, timestamp=null) {
+   const data = {
+    type: resultType,
+    message: content,
+    time: timestamp || new Date().toISOString()
+  };
+
+  fetch("http://localhost:5000/saveResult", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(data)
+  }).then(response => {
+    if (!response.ok) {
+      console.error("后端处理失败");
+    }
+  }).catch(error => {
+    console.error("发送失败:", error);
+  });
+}
+
 
 // 模拟指令执行（调试用）
 //setTimeout(() => {

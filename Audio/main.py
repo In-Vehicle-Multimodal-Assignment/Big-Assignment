@@ -4,6 +4,22 @@ import pyaudio
 from transformers import pipeline
 import json
 import requests
+import librosa
+import numpy as np
+
+VOLUME_THRESHOLD = 0.01
+
+
+def calculate_audio_volume(audio_path):
+    y, sr = librosa.load(audio_path, sr=None)
+    volume = np.max(np.abs(y))
+    print(volume)
+    return volume
+
+
+def should_transcribe(audio_path, threshold):
+    volume = calculate_audio_volume(audio_path)
+    return volume >= threshold
 
 # 音频参数配置
 framerate = 16000  # 采样率
@@ -64,15 +80,15 @@ def recognized_command(command):
     """处理识别到的指令"""
 
     if command == "确认":
-        return 1
+        return 8
     elif command == "拒绝":
-        return 2
+        return 9
     elif command == "打开空调":
         return 3
     elif command == "打开音乐":
         return 4
     elif command == "已注意道路":
-        return 5
+        return 10
     else:
         return 0
 
@@ -82,7 +98,7 @@ def audio_start():
     transcriber = pipeline(
         "automatic-speech-recognition",
         model=model_path,
-        device='cpu'
+        device='cuda'
     )
     transcriber.model.config.forced_decoder_ids = (
         transcriber.tokenizer.get_decoder_prompt_ids(
@@ -104,12 +120,19 @@ def audio_start():
 def audio_recognition():
     global transcriber
     wav_file = Path(__file__).parent / "audio.wav"
-    record("audio.wav",time=3)
+    
+    while True:
+        record("audio.wav",time=3)
+        if should_transcribe(wav_file, VOLUME_THRESHOLD):
+            print("音频文件满足转录条件，开始转录...")
+            break
+        else:
+            print("音频文件音量过低，不满足转录条件，重新录制...")
     transcription = transcriber(str(wav_file))
     print("识别结果:", transcription["text"])
     url = "https://api.siliconflow.cn/v1/chat/completions"
     payload = {
-        "model": "THUDM/GLM-4-9B-0414",
+        "model": "deepseek-ai/DeepSeek-R1",
         "messages": [
             {
                 "role": "user",

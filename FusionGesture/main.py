@@ -14,11 +14,14 @@ from multiprocessing import Queue
 from ultralytics import YOLO
 from ultralytics.utils import LOGGER
 
+hold_fps = 24
+
 last_detected_label = None
+last_check = None
 LOGGER.setLevel('ERROR')
 
 def gesture_recognition(frame,model,queue):
-    global last_detected_label
+    global last_detected_label,last_time,flag
     results = model(frame, stream=True)
     current_detected_label = None
     conf = 0.0
@@ -48,11 +51,11 @@ def gesture_recognition(frame,model,queue):
 
     return frame#cv2.imshow('YOLO Real-Time Gesture Recognition', frame)
 
-prev_gaze_zone = None
+prev_gaze_zone = []
 
 def real_time_tracking(gesture_queue, eye_queue, head_queue):
 
-    global prev_gaze_zone
+    global prev_gaze_zone,last_check
 
     face_detector = FaceDetector()
     face_landmarks_detector = FaceLandmarksDetector()
@@ -147,7 +150,7 @@ def real_time_tracking(gesture_queue, eye_queue, head_queue):
             try:
                 face_detections = face_detector.predict(rgb_frame)
             except Exception as e:
-                print(f"未检测到瞳孔: {e}")
+                head_queue.put("NO_FACE")
 
                 cv2.putText(display_frame, f"FPS: {fps:.1f}", (10, 30), 
                             cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
@@ -170,7 +173,7 @@ def real_time_tracking(gesture_queue, eye_queue, head_queue):
             try:
                 face_landmarks_detections = face_landmarks_detector.predict(rgb_frame)
             except Exception as e:
-                print(f"未检测到人脸: {e}")
+                head_queue.put("NO_FACE")
                 cv2.putText(display_frame, f"FPS: {fps:.1f}", (10, 30), 
                             cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
                 cv2.putText(display_frame, "No Face in the Camera", (10, 60), 
@@ -429,14 +432,24 @@ def real_time_tracking(gesture_queue, eye_queue, head_queue):
                     shake_counter -= 1
 
                 gaze_zone = get_gaze_zone(fused_gaze_vector)
+                                
+                def gaze_zone_check(gaze_zone_list):
+                    if len(gaze_zone_list) < hold_fps:
+                        return None
+                    first = gaze_zone_list[0]
+                    return first if all(zone == first for zone in gaze_zone_list) else None
 
-                if gaze_zone != prev_gaze_zone:
-                    print(f"  头部姿态: P:{np.degrees(head_pose[0]):.1f}°, Y:{np.degrees(head_pose[1]):.1f}°, R:{np.degrees(head_pose[2]):.1f}°")
-                    print(f"  眼睛朝向: {gaze_zone}")
-                    eye_queue.put(gaze_zone)
-                    print("-" * 60) 
-                
-                prev_gaze_zone = gaze_zone
+                current_check = gaze_zone_check(prev_gaze_zone[-hold_fps:])
+                if current_check != None:
+                    #print(f"  头部姿态: P:{np.degrees(head_pose[0]):.1f}°, Y:{np.degrees(head_pose[1]):.1f}°, R:{np.degrees(head_pose[2]):.1f}°")
+                    # print(f"  左眼朝向: {left_direction} | 向量: [{left_gaze_vector[0]:.4f}, {left_gaze_vector[1]:.4f}]")
+                    # print(f"  右眼朝向: {right_direction} | 向量: [{right_gaze_vector[0]:.4f}, {right_gaze_vector[1]:.4f}]")
+                    if( last_check != current_check):
+                        eye_queue.put(current_check)
+                        last_check = current_check
+                    # print("-" * 60) 
+
+                prev_gaze_zone.append(gaze_zone)
 
                 # ============== 绘制头部姿势信息 ==============
                 # 显示头部姿态信息
